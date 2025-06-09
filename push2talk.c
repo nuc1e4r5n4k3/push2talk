@@ -18,7 +18,11 @@ struct keyboards {
 
 #define MAX_KEYBOARDS 32
 
-struct keyboards *open_keyboards()
+
+#define log(fmt, ...)   fprintf(stderr, fmt "\n" __VA_OPT__(,) __VA_ARGS__)
+
+
+static struct keyboards *open_keyboards()
 {
     DIR *dir = opendir(INPUT_PATH);
     struct dirent *entry;
@@ -56,10 +60,26 @@ struct keyboards *open_keyboards()
     return result;
 }
 
-
-void runcmd(const char *command)
+static void runcmd(const char *command)
 {
-    system(command);
+    int result;
+
+    log("Executing command: '%s'", command);
+
+    result = system(command);
+
+    log("Executed command:  '%s'  -- Result: %d", command, result);
+}
+
+static void restart(char **argv, int timer)
+{
+    if (timer > 0)
+    {
+        log("Restarting automatically in %d seconds...", timer);
+        sleep(timer);
+    }
+
+    execv("/proc/self/exe", argv);
 }
 
 int main(int argc, char **argv)
@@ -68,7 +88,7 @@ int main(int argc, char **argv)
 
     if (argc != 4)
     {
-        printf("Usage: %s <keycode> <command-on-press> <command-on-release>\n", argv[0]);
+        log("Usage: %s <keycode> <command-on-press> <command-on-release>", argv[0]);
         return 1;
     }
 
@@ -77,6 +97,14 @@ int main(int argc, char **argv)
     const char *release_command = argv[3];
     int i;
     struct input_event event;
+
+    if (!keyboards->total)
+    {
+        log("Error: No keyboards found! Scheduling restart to retry");
+        restart(argv, 10);
+    }
+
+    log("Found %d keyboards, starting event loop", (int) keyboards->total);
 
     for (;;)
     {
@@ -99,6 +127,11 @@ int main(int argc, char **argv)
                             runcmd(release_command);
                     }
                 }
+            }
+            else if ((keyboards->keyboards[i].revents & (POLLHUP | POLLERR)))
+            {
+                log("Error: I/O error for keyboard at index %d!", i);
+                restart(argv, 10);
             }
         }
     }
