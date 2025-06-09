@@ -28,16 +28,16 @@ struct keyboards *open_keyboards()
 
     while ((entry = readdir(dir)))
     {
-	size_t namesize = strlen(entry->d_name);
-	char path[512];
+        size_t namesize = strlen(entry->d_name);
+        char path[512];
 
-	if (!strcmp(entry->d_name + namesize - 4, "-kbd") && total < MAX_KEYBOARDS)
-	{
-	    strcpy(path, INPUT_PATH "/");
-	    strcat(path, entry->d_name);
+        if (!strcmp(entry->d_name + namesize - 4, "-kbd") && total < MAX_KEYBOARDS)
+        {
+            strcpy(path, INPUT_PATH "/");
+            strcat(path, entry->d_name);
 
-	    files[total++] = open(path, O_RDONLY);
-	}
+            files[total++] = open(path, O_RDONLY);
+        }
     }
 
     closedir(dir);
@@ -49,8 +49,8 @@ struct keyboards *open_keyboards()
     int i;
     for (i = 0; i < total; i++)
     {
-	result->keyboards[i].fd = files[i];
-	result->keyboards[i].events = POLLIN;
+        result->keyboards[i].fd = files[i];
+        result->keyboards[i].events = POLLIN;
     }
 
     return result;
@@ -68,8 +68,8 @@ int main(int argc, char **argv)
 
     if (argc != 4)
     {
-	printf("Usage: %s <keycode> <command-on-press> <command-on-release>\n", argv[0]);
-	return 1;
+        printf("Usage: %s <keycode> <command-on-press> <command-on-release>\n", argv[0]);
+        return 1;
     }
 
     int keycode = atoi(argv[1]);
@@ -80,27 +80,27 @@ int main(int argc, char **argv)
 
     for (;;)
     {
-	for (i = 0; i < keyboards->total; i++)
-	    keyboards->keyboards[i].revents = 0;
+        for (i = 0; i < keyboards->total; i++)
+            keyboards->keyboards[i].revents = 0;
 
-	poll(keyboards->keyboards, keyboards->total, -1);
+        poll(keyboards->keyboards, keyboards->total, -1);
 
-	for (i = 0; i < keyboards->total; i++)
-	{
-	    if (keyboards->keyboards[i].revents == POLLIN)
-	    {
-		if (read(keyboards->keyboards[i].fd, &event, sizeof(event)) == sizeof(event))
-		{
-		    if (event.type == EV_KEY && event.code == keycode)
-		    {
-			if (event.value == 1)
-			    runcmd(press_command);
-			else if (event.value == 0)
-			    runcmd(release_command);
-		    }
-		}
-	    }
-	}
+        for (i = 0; i < keyboards->total; i++)
+        {
+            if (keyboards->keyboards[i].revents == POLLIN)
+            {
+                if (read(keyboards->keyboards[i].fd, &event, sizeof(event)) == sizeof(event))
+                {
+                    if (event.type == EV_KEY && event.code == keycode)
+                    {
+                        if (event.value == 1)
+                            runcmd(press_command);
+                        else if (event.value == 0)
+                            runcmd(release_command);
+                    }
+                }
+            }
+        }
     }
 
     return 0;
