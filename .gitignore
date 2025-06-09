@@ -1,2 +1,3 @@
 push2talk
 *.o
+.kdev4/
