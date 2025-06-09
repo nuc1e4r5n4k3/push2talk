@@ -1,0 +1,11 @@
+[Desktop Entry]
+Comment=Automatically unmute microphone when holding a specific key
+Exec=push2talk 58 'pactl set-source-mute @DEFAULT_SOURCE@ false' 'pactl set-source-mute @DEFAULT_SOURCE@ true'
+GenericName=Push-to-talk daemon
+Icon=mic-ready
+Name=push2talk
+Path=
+StartupNotify=false
+Terminal=false
+TerminalOptions=
+Type=Application
